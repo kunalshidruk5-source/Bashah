@@ -21,21 +21,16 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
+      - name: Set up Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.7'
+          gradle-version: '9.3.1'
 
       - name: Extract Android Project
         shell: bash
         run: |
-          echo "ZIP files:"
-          ls -lh *.zip
-
+          mkdir -p android-project
           unzip -o "aesthetic-badshah-masala-fixed.zip" -d android-project
-
-          echo "Extracted files:"
-          find android-project -maxdepth 4 -type f | sort
 
       - name: Find Android Project
         shell: bash
@@ -43,13 +38,13 @@ jobs:
           SETTINGS=$(find android-project -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -n 1)
 
           if [ -z "$SETTINGS" ]; then
-            echo "ERROR: settings.gradle not found inside ZIP"
+            echo "ERROR: settings.gradle not found"
             exit 1
           fi
 
           PROJECT_DIR=$(dirname "$SETTINGS")
 
-          echo "Android project:"
+          echo "Android project found at:"
           echo "$PROJECT_DIR"
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
@@ -69,7 +64,7 @@ jobs:
       - name: Find APK
         shell: bash
         run: |
-          echo "APK files:"
+          echo "APK files found:"
           find android-project -type f -name "*.apk" -print
 
       - name: Upload APK
