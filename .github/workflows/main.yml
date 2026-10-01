@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -25,22 +26,32 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Find Android project
+      - name: Extract Android Project
         shell: bash
         run: |
-          echo "Files in repository:"
-          find . -maxdepth 3 -type f | sort
+          echo "ZIP files:"
+          ls -lh *.zip
 
-          SETTINGS=$(find . -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -n 1)
+          unzip -o "aesthetic-badshah-masala-fixed.zip" -d android-project
+
+          echo "Extracted files:"
+          find android-project -maxdepth 4 -type f | sort
+
+      - name: Find Android Project
+        shell: bash
+        run: |
+          SETTINGS=$(find android-project -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -n 1)
 
           if [ -z "$SETTINGS" ]; then
-            echo "ERROR: settings.gradle not found"
+            echo "ERROR: settings.gradle not found inside ZIP"
             exit 1
           fi
 
           PROJECT_DIR=$(dirname "$SETTINGS")
 
-          echo "Android project found at: $PROJECT_DIR"
+          echo "Android project:"
+          echo "$PROJECT_DIR"
+
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
       - name: Build Debug APK
@@ -58,12 +69,12 @@ jobs:
       - name: Find APK
         shell: bash
         run: |
-          echo "Searching for APK..."
-          find . -type f -name "*.apk" -print
+          echo "APK files:"
+          find android-project -type f -name "*.apk" -print
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: |
-            **/app/build/outputs/apk/debug/app-debug.apk
+            android-project/**/app/build/outputs/apk/debug/app-debug.apk
